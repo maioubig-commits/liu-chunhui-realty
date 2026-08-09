@@ -392,10 +392,49 @@ ul { list-style: none; }
   color: var(--color-text-light);
 }
 
-.listings-footer {
-  text-align: center;
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   margin-top: 48px;
+  flex-wrap: wrap;
 }
+.page-num {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.page-num:hover { background: var(--color-bg-alt); }
+.page-num.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+.page-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  color: var(--color-text-light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.page-arrow:hover:not(:disabled) { background: var(--color-bg-alt); color: var(--color-primary); }
+.page-arrow:disabled { opacity: 0.3; cursor: default; }
 
 /* Services */
 .services { padding: 100px 0; background: var(--color-bg-alt); }

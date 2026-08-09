@@ -180,13 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const grid = document.getElementById('listing-grid');
   const emptyState = document.getElementById('listing-empty');
   const filterTabs = document.getElementById('filter-tabs');
-  const loadMoreBtn = document.getElementById('load-more');
+  const pagination = document.getElementById('pagination');
 
   const favorites = new Set();
   const PAGE_SIZE = 6;
   let currentFilter = 'all';
   let searchQuery = { type: 'all', region: 'all', price: 'all' };
-  let visibleCount = PAGE_SIZE;
+  let currentPage = 1;
 
   const formatPrice = p => p >= 10000 ? `${(p / 10000).toFixed(1)}億` : `${p.toLocaleString()}萬`;
 
@@ -205,9 +205,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function renderPagination(totalItems) {
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    let html = `<button class="page-arrow" data-page="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''} aria-label="上一頁">‹</button>`;
+    for (let p = 1; p <= totalPages; p++) {
+      html += `<button class="page-num ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    }
+    html += `<button class="page-arrow" data-page="${currentPage + 1}" ${currentPage >= totalPages ? 'disabled' : ''} aria-label="下一頁">›</button>`;
+
+    pagination.innerHTML = html;
+    pagination.style.display = totalPages <= 1 ? 'none' : 'flex';
+  }
+
   function renderListings() {
     const filtered = getFiltered();
-    const slice = filtered.slice(0, visibleCount);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = filtered.slice(start, start + PAGE_SIZE);
 
     grid.innerHTML = slice.map(item => `
       <a class="listing-card" data-id="${item.id}" ${item.link ? `href="${item.link}" target="_blank" rel="noopener"` : ''}>
@@ -230,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
 
     emptyState.hidden = filtered.length !== 0;
-    loadMoreBtn.style.display = visibleCount >= filtered.length ? 'none' : 'inline-flex';
+    renderPagination(filtered.length);
   }
 
   filterTabs.addEventListener('click', e => {
@@ -239,8 +254,18 @@ document.addEventListener('DOMContentLoaded', () => {
     filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
-    visibleCount = PAGE_SIZE;
+    currentPage = 1;
     renderListings();
+  });
+
+  pagination.addEventListener('click', e => {
+    const btn = e.target.closest('[data-page]');
+    if (!btn || btn.disabled) return;
+    const page = Number(btn.dataset.page);
+    if (!page || page === currentPage) return;
+    currentPage = page;
+    renderListings();
+    document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
   });
 
   grid.addEventListener('click', e => {
@@ -251,11 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = Number(favBtn.dataset.fav);
     if (favorites.has(id)) { favorites.delete(id); favBtn.classList.remove('active'); favBtn.textContent = '♡'; }
     else { favorites.add(id); favBtn.classList.add('active'); favBtn.textContent = '♥'; }
-  });
-
-  loadMoreBtn.addEventListener('click', () => {
-    visibleCount += PAGE_SIZE;
-    renderListings();
   });
 
   /* ---------- Hero search ---------- */
@@ -269,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     currentFilter = 'all';
     filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
-    visibleCount = PAGE_SIZE;
+    currentPage = 1;
     renderListings();
     document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
   });
