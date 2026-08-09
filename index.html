@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台灣房屋 松山南京特許加盟店 | 劉春暉</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header" id="header">
+  <div class="container header-inner">
+    <a href="#" class="logo">台灣<span>房屋</span></a>
+    <nav class="main-nav" id="main-nav">
+      <a href="#home">首頁</a>
+      <a href="#listings">熱門物件</a>
+      <a href="#services">服務項目</a>
+      <a href="#about">關於我們</a>
+      <a href="#testimonials">客戶好評</a>
+      <a href="#contact">聯絡我們</a>
+    </nav>
+    <a href="#contact" class="btn btn-primary header-cta">免費估價</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="開啟選單">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero" id="home">
+  <div class="hero-overlay"></div>
+  <div class="container hero-content">
+    <p class="hero-eyebrow">用愛關心每一個家</p>
+    <h1>民生芳鄰【春暉】の<br>找房筆記</h1>
+    <p class="hero-subtitle">台灣房屋 松山南京特許加盟店｜劉春暉 副理專業團隊，陪您走完買賣每一哩路</p>
+
+    <form class="search-box" id="search-form">
+      <div class="search-field">
+        <label for="search-type">類型</label>
+        <select id="search-type">
+          <option value="all">全部類型</option>
+          <option value="house">公寓</option>
+          <option value="apartment">電梯大樓</option>
+          <option value="office">店面/辦公</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="search-region">地區</label>
+        <select id="search-region">
+          <option value="all">全部地區</option>
+          <option value="taipei">台北市</option>
+          <option value="newtaipei">新北市</option>
+          <option value="taoyuan">桃園市</option>
+          <option value="taichung">台中市</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="search-price">價格範圍</label>
+        <select id="search-price">
+          <option value="all">不限</option>
+          <option value="0-1000">1000萬以下</option>
+          <option value="1000-2000">1000-2000萬</option>
+          <option value="2000-3500">2000-3500萬</option>
+          <option value="3500-99999">3500萬以上</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary search-btn">搜尋物件</button>
+    </form>
+
+    <div class="hero-stats">
+      <div class="stat"><strong id="stat-deals">0</strong><span>成交案件</span></div>
+      <div class="stat"><strong id="stat-years">0</strong><span>年服務經驗</span></div>
+      <div class="stat"><strong id="stat-clients">0</strong><span>滿意客戶</span></div>
+      <div class="stat"><strong id="stat-agents">0</strong><span>專業副理</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Listings -->
+<section class="listings" id="listings">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow">精選物件</p>
+      <h2>所有房型</h2>
+      <p class="section-desc">嚴選在地優質物件，每筆資料均經專人實勘與資訊核實</p>
+    </div>
+
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="filter-tab active" data-filter="all">全部</button>
+      <button class="filter-tab" data-filter="house">公寓</button>
+      <button class="filter-tab" data-filter="apartment">電梯大樓</button>
+      <button class="filter-tab" data-filter="office">店面/辦公</button>
+    </div>
+
+    <div class="listing-grid" id="listing-grid">
+      <!-- injected by script.js -->
+    </div>
+
+    <div class="listing-empty" id="listing-empty" hidden>目前沒有符合條件的物件，請試試其他篩選條件。</div>
+
+    <div class="listings-footer">
+      <button class="btn btn-outline" id="load-more">載入更多物件</button>
+    </div>
+  </div>
+</section>
+
+<!-- Services -->
+<section class="services" id="services">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow">我們的服務</p>
+      <h2>一站式不動產服務</h2>
+      <p class="section-desc">不論買屋、賣屋或租賃需求，都能獲得專業且透明的服務流程</p>
+    </div>
+    <div class="service-grid">
+      <div class="service-card">
+        <div class="service-icon">🏠</div>
+        <h3>買屋服務</h3>
+        <p>透過完整物件資料庫與在地經驗，協助您快速鎖定符合預算與需求的理想住宅。</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💰</div>
+        <h3>賣屋服務</h3>
+        <p>提供免費專業估價、行銷曝光與議價協商，幫您用最好的價格順利成交。</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🔑</div>
+        <h3>租賃服務</h3>
+        <p>租客與房東雙向媒合，合約審閱與交屋點交全程協助，安心又省心。</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📋</div>
+        <h3>房屋估價</h3>
+        <p>結合實價登錄與市場行情分析，提供即時且精準的物件估價建議。</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📑</div>
+        <h3>貸款諮詢</h3>
+        <p>合作多家銀行資源，協助評估貸款方案，爭取最有利的利率與成數。</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🛡️</div>
+        <h3>交易保障</h3>
+        <p>履約保證、產權調查與合約把關，讓每一筆交易都安全無虞。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section class="about" id="about">
+  <div class="container about-inner">
+    <div class="about-image agent-image">
+      <img src="agent-photo.jpg" alt="劉春暉 副理" onerror="this.src='https://ui-avatars.com/api/?name=劉春暉&length=3&font-size=0.28&size=900&background=e8622c&color=fff&bold=true'">
+    </div>
+    <div class="about-content">
+      <p class="section-eyebrow">關於我們</p>
+      <h2>用愛關心每一個家<br>劉春暉與您攜手找家</h2>
+      <p>台灣房屋 松山南京特許加盟店，隸屬閎國際不動產有限公司（統一編號：90702360，102登字第243075號），深耕大台北在地市場，秉持「用愛關心每一個家」的理念，為每一位客戶提供最誠信、專業的服務。</p>
+      <ul class="about-list">
+        <li>✔ 副理：劉春暉</li>
+        <li>✔ 台灣房屋優質團隊，台灣起飛</li>
+        <li>✔ 各特許加盟店皆為獨立經營之公司</li>
+        <li>✔ 在地深耕・松山南京商圈專精</li>
+      </ul>
+      <a href="#contact" class="btn btn-primary">預約諮詢</a>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow">客戶好評</p>
+      <h2>他們都選擇信任我們</h2>
+    </div>
+    <div class="testimonial-track" id="testimonial-track">
+      <!-- injected by script.js -->
+    </div>
+    <div class="testimonial-dots" id="testimonial-dots"></div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section class="contact" id="contact">
+  <div class="container contact-inner">
+    <div class="contact-info">
+      <p class="section-eyebrow">聯絡我們</p>
+      <h2>準備好開始了嗎？<br>讓我們助您一臂之力</h2>
+      <p class="section-desc">留下您的聯絡方式，副理劉春暉將於一個工作天內與您聯繫</p>
+      <div class="line-cta">
+        <a href="https://line.me/ti/p/EIUhQezjSg" target="_blank" rel="noopener" class="btn btn-line">
+          <span class="line-icon">LINE</span> 加 LINE 好友，馬上諮詢
+        </a>
+        <div class="line-qr">
+          <img src="line-qr.png" alt="LINE 好友 QR Code">
+          <span>掃描加好友</span>
+        </div>
+      </div>
+      <div class="contact-detail">
+        <div class="contact-item"><span>📍</span><div><strong>門市地址</strong><p>台北市松山區南京東路五段36號（松山南京特許加盟店）</p></div></div>
+        <div class="contact-item"><span>📞</span><div><strong>門市電話</strong><p>(02) 2747-2766</p></div></div>
+        <div class="contact-item"><span>📱</span><div><strong>副理手機</strong><p>劉春暉 0927-066-512</p></div></div>
+        <div class="contact-item"><span>✉️</span><div><strong>電子信箱</strong><p>mi54188@yahoo.com.tw</p></div></div>
+      </div>
+    </div>
+    <div class="contact-form-embed">
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeAMD1ahYYpgQLVwwGBMUVfh6XWZJJ3L6CY8Bpp8ockc1Hm2Q/viewform?embedded=true" title="買房訴求表單" loading="lazy">載入中…</iframe>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <a href="#" class="logo">台灣<span>房屋</span></a>
+      <p>用愛關心每一個家。閎國際不動產有限公司｜松山南京特許加盟店</p>
+    </div>
+    <div class="footer-links">
+      <h4>快速連結</h4>
+      <a href="#listings">熱門物件</a>
+      <a href="#services">服務項目</a>
+      <a href="#about">關於我們</a>
+      <a href="#contact">聯絡我們</a>
+    </div>
+    <div class="footer-links">
+      <h4>服務項目</h4>
+      <a href="#services">買屋服務</a>
+      <a href="#services">賣屋服務</a>
+      <a href="#services">租賃服務</a>
+      <a href="#services">貸款諮詢</a>
+    </div>
+    <div class="footer-social">
+      <h4>關注我們</h4>
+      <div class="social-icons">
+        <a href="#" aria-label="Facebook">FB</a>
+        <a href="#" aria-label="Instagram">IG</a>
+        <a href="#" aria-label="Line">Line</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>閎國際不動產有限公司｜統一編號：90702360｜102登字第243075號</p>
+    <p>各特許加盟店皆為獨立經營之公司</p>
+    <p>&copy; 2026 台灣房屋 松山南京特許加盟店. All rights reserved.</p>
+  </div>
+</footer>
+
+<a href="https://line.me/ti/p/EIUhQezjSg" target="_blank" rel="noopener" class="line-fab" aria-label="加LINE好友諮詢">LINE</a>
+<button class="back-to-top" id="back-to-top" aria-label="回到頂部">↑</button>
+
+<script src="script.js"></script>
+</body>
+</html>
