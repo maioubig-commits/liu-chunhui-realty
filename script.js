@@ -115,9 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const testimonials = [
-    { name: '陳先生', role: '首購族', text: '第一次買房完全沒經驗，經紀人非常有耐心地說明每個流程，最後用理想的價格買到滿意的房子。', avatar: 'https://i.pravatar.cc/80?img=12' },
-    { name: '林小姐', role: '換屋族', text: '賣舊屋買新屋一站搞定，估價精準、行銷曝光也很快，短短三週就成交，非常專業！', avatar: 'https://i.pravatar.cc/80?img=32' },
-    { name: '王先生', role: '投資客', text: '合作多次的房仲團隊，資訊透明、反應迅速，每次都能談到不錯的價格，值得信賴。', avatar: 'https://i.pravatar.cc/80?img=51' },
+    { name: '陳先生', role: '首購族', text: '第一次買房完全沒經驗，經紀人非常有耐心地說明每個流程，最後用理想的價格買到滿意的房子。', avatar: 'https://ui-avatars.com/api/?name=陳&size=160&background=e8622c&color=fff&bold=true&font-size=0.5' },
+    { name: '林小姐', role: '換屋族', text: '賣舊屋買新屋一站搞定，估價精準、行銷曝光也很快，短短三週就成交，非常專業！', avatar: 'https://ui-avatars.com/api/?name=林&size=160&background=c94f1f&color=fff&bold=true&font-size=0.5' },
+    { name: '王先生', role: '投資客', text: '合作多次的房仲團隊，資訊透明、反應迅速，每次都能談到不錯的價格，值得信賴。', avatar: 'https://ui-avatars.com/api/?name=王&size=160&background=1a1a1a&color=fff&bold=true&font-size=0.5' },
   ];
 
   const typeLabel = { house: '公寓', apartment: '電梯大樓', office: '店面/辦公' };
