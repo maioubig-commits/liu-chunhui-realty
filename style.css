@@ -278,6 +278,15 @@ ul { list-style: none; }
   flex-wrap: wrap;
   margin-bottom: 44px;
 }
+.filter-tabs + .floor-tabs { margin-top: -28px; }
+.filter-label {
+  align-self: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-light, #777);
+  padding-right: 4px;
+}
+.floor-tabs .filter-tab { padding: 8px 18px; font-size: 0.85rem; }
 .filter-tab {
   padding: 10px 24px;
   border-radius: 999px;
