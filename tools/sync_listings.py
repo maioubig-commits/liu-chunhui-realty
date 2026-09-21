@@ -138,6 +138,35 @@ def parse_layout(layout):
             int(baths) if baths == int(baths) else baths)
 
 
+CN_NUM = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9}
+
+
+def cn_to_int(t):
+    if t == '十':
+        return 10
+    if t.startswith('十'):
+        return 10 + CN_NUM.get(t[1:], 0)
+    if '十' in t:
+        a, _, b = t.partition('十')
+        return CN_NUM.get(a, 0) * 10 + CN_NUM.get(b, 0)
+    return CN_NUM.get(t, 0)
+
+
+def parse_floor(addr, title):
+    """從地址抓所在樓層（B1 = -1）；抓不到回傳 None，不亂猜。"""
+    a = str(addr or '').translate(str.maketrans('０１２３４５６７８９ＢＦ', '0123456789BF'))
+    m = re.search(r'B(\d)\s*$|地下\s*(\d)?', a)
+    if m:
+        return -int(m.group(1) or m.group(2) or 1)
+    m = re.search(r'(\d+)\s*(?:[-~至、,]\s*\d+\s*)?(?:樓|F)', a) or re.search(r'([一二三四五六七八九十]+)樓', a)
+    if m:
+        g = m.group(1)
+        return int(g) if g.isdigit() else cn_to_int(g)
+    if re.search(r'(?<![\d一二三四五六七八九十])(1樓|一樓)', str(title)):
+        return 1
+    return None
+
+
 def classify(r):
     if r['forced_type']:
         return r['forced_type']
@@ -153,7 +182,7 @@ def classify(r):
 # ---------- script.js 讀寫 ----------
 ENTRY_RE = re.compile(
     r"\{ id: (\d+), type: '(\w+)', title: '((?:[^'\\]|\\.)*)', region: '([^']*)', price: (\d+), "
-    r"area: ([\d.]+), rooms: ([\d.]+), baths: ([\d.]+), badge: '([^']*)', img: '([^']*)', link: '([^']*)' \}")
+    r"area: ([\d.]+), rooms: ([\d.]+), baths: ([\d.]+), (?:floor: (?:-?\d+|null), )?badge: '([^']*)', img: '([^']*)', link: '([^']*)' \}")
 ARRAY_RE = re.compile(r"(const listings = \[\n)(.*?)(\n  \];)", re.S)
 
 
@@ -196,7 +225,7 @@ def build(master, cache):
         rooms, baths = parse_layout(r['layout'])
         e = {'type': photo['type'] if photo else classify(r), 'title': r['title'],
              'region': region_of(r['sheet'], r['addr']), 'price': price, 'area': area,
-             'rooms': rooms, 'baths': baths}
+             'rooms': rooms, 'baths': baths, 'floor': parse_floor(r['addr'], r['title'])}
         if photo:
             e.update(img=photo['img'], link=photo['link'], badge=photo['badge'])
         else:
@@ -213,7 +242,7 @@ def render(final):
         lines.append(
             f"    {{ id: {i}, type: '{e['type']}', title: '{js_str(e['title'])}', region: '{e['region']}', "
             f"price: {e['price']}, area: {fmt_num(e['area'])}, rooms: {fmt_num(e['rooms'])}, "
-            f"baths: {fmt_num(e['baths'])}, badge: '{e['badge']}', img: '{e['img']}', link: '{e['link']}' }},")
+            f"baths: {fmt_num(e['baths'])}, floor: {'null' if e['floor'] is None else e['floor']}, badge: '{e['badge']}', img: '{e['img']}', link: '{e['link']}' }},")
     return '\n'.join(lines)
 
 
