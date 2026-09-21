@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import zlib
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -102,17 +102,47 @@ COUNTIES = ['宜蘭縣', '彰化縣', '南投縣', '雲林縣', '嘉義縣', '�
             '澎湖縣', '金門縣', '連江縣', '新竹縣', '苗栗縣', '基隆市']
 
 
-def region_of(sheet, addr):
+# 總表地址常省略縣市，只寫「壯圍鄉…」這類；用鄉鎮反查縣市
+TOWNSHIP_COUNTY = {}
+for county, ts in {
+    '宜蘭縣': '宜蘭市 頭城鎮 礁溪鄉 壯圍鄉 員山鄉 羅東鎮 三星鄉 大同鄉 五結鄉 冬山鄉 蘇澳鎮 南澳鄉',
+}.items():
+    for t in ts.split():
+        TOWNSHIP_COUNTY[t] = county
+# 「北區/東區/西區…」各縣市都有，靠案名關鍵字判斷
+AMBIGUOUS_HINT = [('中醫', '台中市'), ('逢甲', '台中市'), ('新竹', '新竹市'), ('竹北', '新竹縣')]
+CITY_PREFIX = r'(?:(?:台北|新北|桃園|台中|台南|高雄|新竹|基隆|嘉義)市|\S{2}縣)?'
+
+
+def clean_addr(addr):
+    return unicodedata.normalize('NFKC', str(addr or '')).replace('臺', '台').replace(' ', '')
+
+
+def parse_district(addr):
+    m = re.match(CITY_PREFIX + r'([^\d區鄉鎮市]{1,3}[區鄉鎮市])', clean_addr(addr))
+    return m.group(1) if m else ''
+
+
+def region_of(sheet, addr, title=''):
     if sheet.startswith('松-') or not addr:
         return '台北市'
-    addr = str(addr)
+    a = clean_addr(addr)
     for c in COUNTIES:
-        if addr.startswith(c):
+        if a.startswith(c):
             return c
-    m = re.match(r'^(\S{2,3}區)', addr)
-    if m and m.group(1) in DISTRICT_CITY:
-        return DISTRICT_CITY[m.group(1)]
-    return '新北市' if sheet == '外區-新北市' else '台北市'
+    m = re.match(r'^(台北|新北|桃園|台中|台南|高雄|新竹)市', a)
+    if m:
+        return m.group(0)
+    d = parse_district(a)
+    if d in TOWNSHIP_COUNTY:
+        return TOWNSHIP_COUNTY[d]
+    if d in DISTRICT_CITY:
+        if d in ('北區', '東區', '西區', '南區', '中區', '香山區'):
+            for kw, city in AMBIGUOUS_HINT:
+                if kw in (title or ''):
+                    return city
+        return DISTRICT_CITY[d]
+    return {'外區-新北市': '新北市', '外區-北市': '台北市'}.get(sheet, '其他')
 
 
 def parse_price(p):
@@ -181,7 +211,7 @@ def classify(r):
 
 # ---------- script.js 讀寫 ----------
 ENTRY_RE = re.compile(
-    r"\{ id: (\d+), type: '(\w+)', title: '((?:[^'\\]|\\.)*)', region: '([^']*)', price: (\d+), "
+    r"\{ id: (\d+), type: '(\w+)', title: '((?:[^'\\]|\\.)*)', region: '([^']*)', (?:district: '[^']*', )?price: (\d+), "
     r"area: ([\d.]+), rooms: ([\d.]+), baths: ([\d.]+), (?:floor: (?:-?\d+|null), )?badge: '([^']*)', img: '([^']*)', link: '([^']*)' \}")
 ARRAY_RE = re.compile(r"(const listings = \[\n)(.*?)(\n  \];)", re.S)
 
@@ -224,7 +254,8 @@ def build(master, cache):
             continue
         rooms, baths = parse_layout(r['layout'])
         e = {'type': photo['type'] if photo else classify(r), 'title': r['title'],
-             'region': region_of(r['sheet'], r['addr']), 'price': price, 'area': area,
+             'region': region_of(r['sheet'], r['addr'], r['title']),
+             'district': parse_district(r['addr']), 'price': price, 'area': area,
              'rooms': rooms, 'baths': baths, 'floor': parse_floor(r['addr'], r['title'])}
         if photo:
             e.update(img=photo['img'], link=photo['link'], badge=photo['badge'])
@@ -240,7 +271,7 @@ def render(final):
     lines = []
     for i, e in enumerate(final, 1):
         lines.append(
-            f"    {{ id: {i}, type: '{e['type']}', title: '{js_str(e['title'])}', region: '{e['region']}', "
+            f"    {{ id: {i}, type: '{e['type']}', title: '{js_str(e['title'])}', region: '{e['region']}', district: '{e['district']}', "
             f"price: {e['price']}, area: {fmt_num(e['area'])}, rooms: {fmt_num(e['rooms'])}, "
             f"baths: {fmt_num(e['baths'])}, floor: {'null' if e['floor'] is None else e['floor']}, badge: '{e['badge']}', img: '{e['img']}', link: '{e['link']}' }},")
     return '\n'.join(lines)
