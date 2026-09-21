@@ -197,6 +197,12 @@ def parse_floor(addr, title):
     return None
 
 
+def has_parking(title):
+    """總表沒有車位欄，只能靠案名判斷「有標示車位」；沒標示不代表沒有。"""
+    t = str(title).replace('車路頭', '')
+    return 1 if re.search(r'車位|停車|車庫|雙車|平車|含車|附車|頂加車|房車|車$', t) else 0
+
+
 def classify(r):
     if r['forced_type']:
         return r['forced_type']
@@ -212,7 +218,7 @@ def classify(r):
 # ---------- script.js 讀寫 ----------
 ENTRY_RE = re.compile(
     r"\{ id: (\d+), type: '(\w+)', title: '((?:[^'\\]|\\.)*)', region: '([^']*)', (?:district: '[^']*', )?price: (\d+), "
-    r"area: ([\d.]+), rooms: ([\d.]+), baths: ([\d.]+), (?:floor: (?:-?\d+|null), )?badge: '([^']*)', img: '([^']*)', link: '([^']*)' \}")
+    r"area: ([\d.]+), rooms: ([\d.]+), baths: ([\d.]+), (?:floor: (?:-?\d+|null), )?(?:parking: [01], )?badge: '([^']*)', img: '([^']*)', link: '([^']*)' \}")
 ARRAY_RE = re.compile(r"(const listings = \[\n)(.*?)(\n  \];)", re.S)
 
 
@@ -256,7 +262,8 @@ def build(master, cache):
         e = {'type': photo['type'] if photo else classify(r), 'title': r['title'],
              'region': region_of(r['sheet'], r['addr'], r['title']),
              'district': parse_district(r['addr']), 'price': price, 'area': area,
-             'rooms': rooms, 'baths': baths, 'floor': parse_floor(r['addr'], r['title'])}
+             'rooms': rooms, 'baths': baths, 'floor': parse_floor(r['addr'], r['title']),
+             'parking': has_parking(r['title'])}
         if photo:
             e.update(img=photo['img'], link=photo['link'], badge=photo['badge'])
         else:
@@ -273,7 +280,7 @@ def render(final):
         lines.append(
             f"    {{ id: {i}, type: '{e['type']}', title: '{js_str(e['title'])}', region: '{e['region']}', district: '{e['district']}', "
             f"price: {e['price']}, area: {fmt_num(e['area'])}, rooms: {fmt_num(e['rooms'])}, "
-            f"baths: {fmt_num(e['baths'])}, floor: {'null' if e['floor'] is None else e['floor']}, badge: '{e['badge']}', img: '{e['img']}', link: '{e['link']}' }},")
+            f"baths: {fmt_num(e['baths'])}, floor: {'null' if e['floor'] is None else e['floor']}, parking: {e['parking']}, badge: '{e['badge']}', img: '{e['img']}', link: '{e['link']}' }},")
     return '\n'.join(lines)
 
 
