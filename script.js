@@ -228,17 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const favorites = new Set();
   const PAGE_SIZE = 6;
-  let searchQuery = { type: 'all', region: 'all', price: 'all', floor: 'all', rooms: 'all', parking: 'all' };
+  let searchQuery = { type: 'all', region: 'all', district: 'all', price: 'all', floor: 'all', rooms: 'all', parking: 'all' };
   let currentPage = 1;
 
   const formatPrice = p => p >= 10000 ? `${(p / 10000).toFixed(1)}億` : `${p.toLocaleString()}萬`;
 
-  const regionKey = { '台北市': 'taipei', '新北市': 'newtaipei', '桃園市': 'taoyuan', '台中市': 'taichung' };
-
   function getFiltered() {
     return listings.filter(item => {
       if (searchQuery.type !== 'all' && item.type !== searchQuery.type) return false;
-      if (searchQuery.region !== 'all' && regionKey[item.region] !== searchQuery.region) return false;
+      if (searchQuery.region !== 'all' && item.region !== searchQuery.region) return false;
+      if (searchQuery.district !== 'all' && item.district !== searchQuery.district) return false;
       if (searchQuery.price !== 'all') {
         const [min, max] = searchQuery.price.split('-').map(Number);
         if (item.price < min || item.price > max) return false;
@@ -320,13 +319,47 @@ document.addEventListener('DOMContentLoaded', () => {
     else { favorites.add(id); favBtn.classList.add('active'); favBtn.textContent = '♥'; }
   });
 
+  /* ---------- Hero search：地區／行政區 選項由物件資料自動產生 ---------- */
+  const COUNTY_ORDER = ['台北市', '新北市', '基隆市', '桃園市', '新竹市', '新竹縣', '宜蘭縣', '苗栗縣', '台中市',
+    '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '台南市', '高雄市', '屏東縣', '花蓮縣', '台東縣', '澎湖縣', '金門縣', '連江縣'];
+  const regionSelect = document.getElementById('search-region');
+  const districtSelect = document.getElementById('search-district');
+
+  function populateRegionOptions() {
+    const present = [...new Set(listings.map(i => i.region))]
+      .sort((a, b) => (COUNTY_ORDER.indexOf(a) + 1 || 99) - (COUNTY_ORDER.indexOf(b) + 1 || 99));
+    regionSelect.innerHTML = '<option value="all">全部地區</option>' +
+      present.map(r => `<option value="${r}">${r}</option>`).join('');
+  }
+
+  function populateDistrictOptions() {
+    const region = regionSelect.value;
+    if (region === 'all') {
+      districtSelect.innerHTML = '<option value="all">請先選擇地區</option>';
+      districtSelect.disabled = true;
+      return;
+    }
+    const count = {};
+    listings.filter(i => i.region === region && i.district)
+      .forEach(i => { count[i.district] = (count[i.district] || 0) + 1; });
+    const districts = Object.keys(count).sort((a, b) => count[b] - count[a]);
+    districtSelect.innerHTML = '<option value="all">不限</option>' +
+      districts.map(d => `<option value="${d}">${d}</option>`).join('');
+    districtSelect.disabled = districts.length === 0;
+  }
+
+  regionSelect.addEventListener('change', populateDistrictOptions);
+  populateRegionOptions();
+  populateDistrictOptions();
+
   /* ---------- Hero search ---------- */
   const searchForm = document.getElementById('search-form');
   searchForm.addEventListener('submit', e => {
     e.preventDefault();
     searchQuery = {
       type: document.getElementById('search-type').value,
-      region: document.getElementById('search-region').value,
+      region: regionSelect.value,
+      district: districtSelect.value,
       price: document.getElementById('search-price').value,
       floor: document.getElementById('search-floor').value,
       rooms: document.getElementById('search-rooms').value,

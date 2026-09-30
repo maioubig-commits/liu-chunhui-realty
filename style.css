@@ -241,6 +241,7 @@ ul { list-style: none; }
   color: var(--color-text);
   background: var(--color-bg-alt);
 }
+.search-field select:disabled { color: var(--color-text-light); cursor: not-allowed; }
 .search-btn {
   flex: 1 1 160px;
   padding: 13px 28px;

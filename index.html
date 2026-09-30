@@ -98,22 +98,24 @@
 
     <form class="search-box" id="search-form">
       <div class="search-field">
+        <label for="search-region">地區</label>
+        <select id="search-region">
+          <option value="all">全部地區</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="search-district">行政區</label>
+        <select id="search-district" disabled>
+          <option value="all">請先選擇地區</option>
+        </select>
+      </div>
+      <div class="search-field">
         <label for="search-type">類型</label>
         <select id="search-type">
           <option value="all">全部類型</option>
           <option value="house">公寓</option>
           <option value="apartment">電梯大樓</option>
           <option value="office">店面/辦公</option>
-        </select>
-      </div>
-      <div class="search-field">
-        <label for="search-region">地區</label>
-        <select id="search-region">
-          <option value="all">全部地區</option>
-          <option value="taipei">台北市</option>
-          <option value="newtaipei">新北市</option>
-          <option value="taoyuan">桃園市</option>
-          <option value="taichung">台中市</option>
         </select>
       </div>
       <div class="search-field">
