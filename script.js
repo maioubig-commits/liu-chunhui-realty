@@ -221,35 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  /* ---------- Hero stat counters ---------- */
-  const statTargets = { 'stat-deals': 1280, 'stat-years': 15, 'stat-clients': 960, 'stat-agents': 42 };
-  const statEls = Object.keys(statTargets).map(id => document.getElementById(id));
-
-  const animateStats = () => {
-    statEls.forEach(el => {
-      const target = statTargets[el.id];
-      const duration = 1400;
-      const start = performance.now();
-      const step = now => {
-        const progress = Math.min((now - start) / duration, 1);
-        el.textContent = Math.floor(progress * target).toLocaleString();
-        if (progress < 1) requestAnimationFrame(step);
-        else el.textContent = target.toLocaleString();
-      };
-      requestAnimationFrame(step);
-    });
-  };
-
-  const statsObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateStats();
-        statsObserver.disconnect();
-      }
-    });
-  }, { threshold: 0.5 });
-  statsObserver.observe(document.querySelector('.hero-stats'));
-
   /* ---------- Listings render & filter ---------- */
   const grid = document.getElementById('listing-grid');
   const emptyState = document.getElementById('listing-empty');
