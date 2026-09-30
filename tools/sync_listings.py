@@ -213,6 +213,60 @@ def extract_schools(title):
     return (elem.group(1) + '國小' if elem else ''), (junior.group(1) + '國中' if junior else '')
 
 
+# ---------- 國小學區（門牌反查，目前只做松山區）----------
+# 資料來源：
+#   1) 臺北市「門牌位置數值資料」（data.taipei，每月更新）→ 地址精確查到「村里＋鄰」，
+#      本機篩出松山區存成 songshan_addr_index.csv（街路段,巷,弄,號,村里,鄰）。
+#   2) Leo 提供的《臺北市115學年度國民小學學區一覽表》PDF → 只涵蓋松山、信義、大安三區，
+#      且松山區目前只查得到「松山國小」的學區範圍（慈祐里全里、新東里第19鄰，與民權國小共同學區）。
+#      松山區其餘 32 個里（敦化、三民、民族、西松、民生等國小）暫無官方學區資料，查不到就不填，
+#      不用學區關鍵字之類的方式亂猜。之後若拿到更完整的學區一覽表，把下面 SONGSHAN_ELEM_ZONES
+#      補上對應的「里／鄰 → 學校」規則即可，地址反查的部分不用改。
+SONGSHAN_ADDR_INDEX = os.path.join(HERE, 'songshan_addr_index.csv')
+SONGSHAN_ELEM_ZONES = {
+    ('慈祐里', None): '松山國小',
+    ('新東里', '19'): '松山國小',  # ◎【松山、民權】共同學區，這裡先只標松山國小
+}
+
+
+def load_addr_index(path):
+    if not os.path.exists(path):
+        return {}
+    import csv
+    index = {}
+    with open(path, encoding='utf-8') as f:
+        for row in csv.DictReader(f):
+            index[(row['street'], row['lane'], row['alley'], row['num'])] = (row['village'], row['neighbor'])
+    return index
+
+
+def parse_addr_key(addr, district):
+    """把地址拆成 (街路段, 巷, 弄, 號)，格式對齊門牌資料，找不到就回傳 None。"""
+    a = unicodedata.normalize('NFKC', str(addr or ''))
+    if district in a:
+        a = a.split(district, 1)[1]
+    m = re.match(r'^([^\d]+?)(?:(\d+)巷)?(?:(\d+)弄)?(\d+(?:之\d+)?)號', a)
+    if not m:
+        return None
+    street, lane, alley, num = m.groups()
+    return (street.strip(), lane or '', alley or '', num)
+
+
+def address_school_elem(addr, sheet, index):
+    """只針對松-電梯/松-公寓/松-店面（松山區）門牌反查；查不到村里、或村里沒有已知學區規則就回傳空字串。"""
+    if sheet not in ('松-電梯', '松-公寓', '松-店面') or not index:
+        return ''
+    key = parse_addr_key(addr, '松山區')
+    if not key:
+        return ''
+    hit = index.get(key)
+    if not hit:
+        return ''
+    village, neighbor = hit
+    return (SONGSHAN_ELEM_ZONES.get((village, None))
+            or SONGSHAN_ELEM_ZONES.get((village, neighbor)) or '')
+
+
 def classify(r):
     if r['forced_type']:
         return r['forced_type']
@@ -253,6 +307,7 @@ def fmt_num(n):
 def build(master, cache):
     final, missing = [], 0
     used = {}
+    addr_index = load_addr_index(SONGSHAN_ADDR_INDEX)
     for r in master:
         if not r['advertisable']:
             continue
@@ -271,6 +326,7 @@ def build(master, cache):
             continue
         rooms, baths = parse_layout(r['layout'])
         school_elem, school_junior = extract_schools(r['title'])
+        school_elem = address_school_elem(r['addr'], r['sheet'], addr_index) or school_elem
         e = {'type': photo['type'] if photo else classify(r), 'title': r['title'],
              'region': region_of(r['sheet'], r['addr'], r['title']),
              'district': parse_district(r['addr']), 'price': price, 'area': area,
