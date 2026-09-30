@@ -130,7 +130,7 @@ ul { list-style: none; }
 
 /* 左上角台灣房屋 LOGO 下方的動態徽章（58px 放大 5 倍＝290px），固定在畫面左上角 */
 .brand-emblem {
-  position: fixed;
+  position: absolute;
   top: 90px;
   left: 24px;
   width: 290px;
