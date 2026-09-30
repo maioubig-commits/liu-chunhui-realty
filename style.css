@@ -329,6 +329,12 @@ ul { list-style: none; }
   align-items: center;
   gap: 4px;
 }
+.listing-location:has(+ .listing-school) { margin-bottom: 4px; }
+.listing-school {
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+}
 .listing-meta {
   display: flex;
   gap: 16px;

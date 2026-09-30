@@ -203,6 +203,16 @@ def has_parking(title):
     return 1 if re.search(r'車位|停車|車庫|雙車|平車|含車|附車|頂加車|房車|車$', t) else 0
 
 
+def extract_schools(title):
+    """總表沒有學區欄，只在案名直接寫出「OO國小/國中」時才抓得到（例如「中山國小站」）；
+    案名只寫「雙敦學區」「麗山學區」這種地區暱稱、看不出對應哪所學校的，抓不到就不填，
+    避免亂猜錯學校。"""
+    t = str(title)
+    elem = re.search(r'([一-龥]{2})國小', t)
+    junior = re.search(r'([一-龥]{2})國中', t)
+    return (elem.group(1) + '國小' if elem else ''), (junior.group(1) + '國中' if junior else '')
+
+
 def classify(r):
     if r['forced_type']:
         return r['forced_type']
@@ -218,7 +228,8 @@ def classify(r):
 # ---------- script.js 讀寫 ----------
 ENTRY_RE = re.compile(
     r"\{ id: (\d+), type: '(\w+)', title: '((?:[^'\\]|\\.)*)', region: '([^']*)', (?:district: '[^']*', )?price: (\d+), "
-    r"area: ([\d.]+), rooms: ([\d.]+), baths: ([\d.]+), (?:floor: (?:-?\d+|null), )?(?:parking: [01], )?badge: '([^']*)', img: '([^']*)', link: '([^']*)' \}")
+    r"area: ([\d.]+), rooms: ([\d.]+), baths: ([\d.]+), (?:floor: (?:-?\d+|null), )?(?:parking: [01], )?"
+    r"(?:schoolElem: '[^']*', )?(?:schoolJunior: '[^']*', )?badge: '([^']*)', img: '([^']*)', link: '([^']*)' \}")
 ARRAY_RE = re.compile(r"(const listings = \[\n)(.*?)(\n  \];)", re.S)
 
 
@@ -259,11 +270,12 @@ def build(master, cache):
         if price is None:
             continue
         rooms, baths = parse_layout(r['layout'])
+        school_elem, school_junior = extract_schools(r['title'])
         e = {'type': photo['type'] if photo else classify(r), 'title': r['title'],
              'region': region_of(r['sheet'], r['addr'], r['title']),
              'district': parse_district(r['addr']), 'price': price, 'area': area,
              'rooms': rooms, 'baths': baths, 'floor': parse_floor(r['addr'], r['title']),
-             'parking': has_parking(r['title'])}
+             'parking': has_parking(r['title']), 'schoolElem': school_elem, 'schoolJunior': school_junior}
         if photo:
             e.update(img=photo['img'], link=photo['link'], badge=photo['badge'])
         else:
@@ -280,7 +292,8 @@ def render(final):
         lines.append(
             f"    {{ id: {i}, type: '{e['type']}', title: '{js_str(e['title'])}', region: '{e['region']}', district: '{e['district']}', "
             f"price: {e['price']}, area: {fmt_num(e['area'])}, rooms: {fmt_num(e['rooms'])}, "
-            f"baths: {fmt_num(e['baths'])}, floor: {'null' if e['floor'] is None else e['floor']}, parking: {e['parking']}, badge: '{e['badge']}', img: '{e['img']}', link: '{e['link']}' }},")
+            f"baths: {fmt_num(e['baths'])}, floor: {'null' if e['floor'] is None else e['floor']}, parking: {e['parking']}, "
+            f"schoolElem: '{e['schoolElem']}', schoolJunior: '{e['schoolJunior']}', badge: '{e['badge']}', img: '{e['img']}', link: '{e['link']}' }},")
     return '\n'.join(lines)
 
 
