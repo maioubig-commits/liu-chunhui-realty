@@ -213,58 +213,99 @@ def extract_schools(title):
     return (elem.group(1) + '國小' if elem else ''), (junior.group(1) + '國中' if junior else '')
 
 
-# ---------- 國小學區（門牌反查，目前只做松山區）----------
-# 資料來源：
-#   1) 臺北市「門牌位置數值資料」（data.taipei，每月更新）→ 地址精確查到「村里＋鄰」，
-#      本機篩出松山區存成 songshan_addr_index.csv（街路段,巷,弄,號,村里,鄰）。
-#   2) Leo 提供的《臺北市115學年度國民小學學區一覽表》PDF → 只涵蓋松山、信義、大安三區，
-#      且松山區目前只查得到「松山國小」的學區範圍（慈祐里全里、新東里第19鄰，與民權國小共同學區）。
-#      松山區其餘 32 個里（敦化、三民、民族、西松、民生等國小）暫無官方學區資料，查不到就不填，
-#      不用學區關鍵字之類的方式亂猜。之後若拿到更完整的學區一覽表，把下面 SONGSHAN_ELEM_ZONES
-#      補上對應的「里／鄰 → 學校」規則即可，地址反查的部分不用改。
-SONGSHAN_ADDR_INDEX = os.path.join(HERE, 'songshan_addr_index.csv')
-SONGSHAN_ELEM_ZONES = {
-    ('慈祐里', None): '松山國小',
-    ('新東里', '19'): '松山國小',  # ◎【松山、民權】共同學區，這裡先只標松山國小
-}
+# ---------- 國小／國中學區（直接查臺北市政府「學區查詢系統」官方 API，目前只做松山區）----------
+# 流程跟 https://schooldistrict.tp.edu.tw 網頁一樣：先把地址交給臺北市地理倉儲地址定位
+# 查出「里／鄰」，再拿里鄰去查對應學區（國小＋國中一次查到，含大學區共同學區的多所學校）。
+# 這兩支都是該網站自己頁面在呼叫的公開 API，用 Referer 帶自己網域即可，不是繞過權限。
+# 查過的地址會存進 tools/school_zone_cache.json，之後同一筆地址不用再打（對政府主機客氣一點），
+# 只有新地址或地址改了才會重查；查詢失敗（沒網路、逾時）就跳過，不影響其他資料照常發佈。
+SCHOOL_ZONE_CACHE = os.path.join(HERE, 'school_zone_cache.json')
+SCHOOL_ZONE_SHEETS = ('松-電梯', '松-公寓', '松-店面')  # 目前只針對松山區；之後要擴大縣市在這裡加分頁即可
+_GEOCODE_URL = 'https://map-tpgos.gov.taipei/embed/webapi.cfm'
+_SCHOOL_URL = 'https://schooldistrict.tp.edu.tw/gis/checkSchoolByVillage.jsp'
+_GIS_HEADERS = {'Referer': 'https://schooldistrict.tp.edu.tw/html/search.jsp'}
+_GIS_APIKEY = '918A7CB57AE38AD226859ECFEE7811F0CF9BFC00B197C8D0780CF8C3C9BEE820BDAB728ECD6775DA2DF39DCAF26DBB68'
 
 
-def load_addr_index(path):
-    if not os.path.exists(path):
-        return {}
-    import csv
-    index = {}
-    with open(path, encoding='utf-8') as f:
-        for row in csv.DictReader(f):
-            index[(row['street'], row['lane'], row['alley'], row['num'])] = (row['village'], row['neighbor'])
-    return index
+def load_school_zone_cache():
+    if os.path.exists(SCHOOL_ZONE_CACHE):
+        return json.load(open(SCHOOL_ZONE_CACHE, encoding='utf-8'))
+    return {}
 
 
-def parse_addr_key(addr, district):
-    """把地址拆成 (街路段, 巷, 弄, 號)，格式對齊門牌資料，找不到就回傳 None。"""
-    a = unicodedata.normalize('NFKC', str(addr or ''))
-    if district in a:
-        a = a.split(district, 1)[1]
-    m = re.match(r'^([^\d]+?)(?:(\d+)巷)?(?:(\d+)弄)?(\d+(?:之\d+)?)號', a)
-    if not m:
+def save_school_zone_cache(cache):
+    json.dump(cache, open(SCHOOL_ZONE_CACHE, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+
+
+def _gis_get(url, params):
+    import urllib.request, urllib.parse, ssl
+    req = urllib.request.Request(f'{url}?{urllib.parse.urlencode(params)}', headers=_GIS_HEADERS)
+    ctx = ssl._create_unverified_context()  # 政府網站的憑證鏈本機驗不過，跟瀏覽器行為一致改用 -k 等級處理
+    with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
+        return resp.read().decode('utf-8', 'ignore')
+
+
+def _gis_post(url, data):
+    import urllib.request, urllib.parse, ssl
+    req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(),
+                                  headers=_GIS_HEADERS, method='POST')
+    ctx = ssl._create_unverified_context()
+    with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
+        return resp.read().decode('utf-8', 'ignore')
+
+
+def fetch_school_zone(addr):
+    """查一個地址的學區，回傳 {'elem': [...], 'junior': [...]}；查不到/查詢失敗回傳 None。"""
+    try:
+        text = _gis_get(_GEOCODE_URL, {
+            'SERVICE': 'ADDRESS', 'ADDRESS': addr, 'APIKEY': _GIS_APIKEY,
+            'ITEM_LIST': 'TPGOS_CA_ADDR:30,TPGOS_PWLMK_ADDR:30,TPGOS_XY_ADDR:30,TGOS_V2_ADDR:30',
+            'format': 'JSON', 'DETAIL': 'true'})
+        m = re.search(r'\{"WEBSERVICE".*\}\}\}', text)
+        if not m:
+            return None
+        qr = json.loads(m.group(0))['WEBSERVICE']['QUERYRESULT']
+        if qr.get('COUNT') in (None, '0'):
+            return None
+        detail = qr.get('DETAIL') or {}
+        zone, village, lin = detail.get('ZONE'), detail.get('LIE'), detail.get('LIN')
+        if not (zone and village and lin):
+            return None
+        neighbor = re.sub(r'\D', '', lin).lstrip('0') or '0'
+
+        text2 = _gis_post(_SCHOOL_URL, {'sectName': zone, 'lieName': village, 'sdfName': f'{village}{neighbor}'})
+        m2 = re.search(r'\[.*\]', text2, re.S)
+        records = json.loads(m2.group(0)) if m2 else []
+    except Exception:
         return None
-    street, lane, alley, num = m.groups()
-    return (street.strip(), lane or '', alley or '', num)
+
+    elem, junior = [], []
+    for rec in records:
+        name = rec.get('schoolName', '')
+        if name.endswith('國小') and name not in elem:
+            elem.append(name)
+        elif '國中' in name:
+            base = re.sub(r'高中國中部$', '國中', name)  # 附設國中部的完全中學，統一顯示國中部那個名字
+            if base not in junior:
+                junior.append(base)
+    return {'elem': elem, 'junior': junior}
 
 
-def address_school_elem(addr, sheet, index):
-    """只針對松-電梯/松-公寓/松-店面（松山區）門牌反查；查不到村里、或村里沒有已知學區規則就回傳空字串。"""
-    if sheet not in ('松-電梯', '松-公寓', '松-店面') or not index:
-        return ''
-    key = parse_addr_key(addr, '松山區')
+def address_school_zone(addr, sheet, cache):
+    """只針對 SCHOOL_ZONE_SHEETS（目前是松山區三個分頁）查學區；優先吃快取，新地址才打 API。"""
+    if sheet not in SCHOOL_ZONE_SHEETS:
+        return '', ''
+    key = unicodedata.normalize('NFKC', str(addr or '')).strip()
     if not key:
-        return ''
-    hit = index.get(key)
-    if not hit:
-        return ''
-    village, neighbor = hit
-    return (SONGSHAN_ELEM_ZONES.get((village, None))
-            or SONGSHAN_ELEM_ZONES.get((village, neighbor)) or '')
+        return '', ''
+    if key not in cache:
+        result = fetch_school_zone(key)
+        if result is not None:
+            cache[key] = result  # 查詢失敗（逾時、地址查無資料）不寫快取，下次執行會自動重試
+    result = cache.get(key)
+    if not result:
+        return '', ''
+    return '、'.join(result['elem']), '、'.join(result['junior'])
 
 
 def classify(r):
@@ -307,7 +348,7 @@ def fmt_num(n):
 def build(master, cache):
     final, missing = [], 0
     used = {}
-    addr_index = load_addr_index(SONGSHAN_ADDR_INDEX)
+    zone_cache = load_school_zone_cache()
     for r in master:
         if not r['advertisable']:
             continue
@@ -325,8 +366,9 @@ def build(master, cache):
         if price is None:
             continue
         rooms, baths = parse_layout(r['layout'])
-        school_elem, school_junior = extract_schools(r['title'])
-        school_elem = address_school_elem(r['addr'], r['sheet'], addr_index) or school_elem
+        kw_elem, kw_junior = extract_schools(r['title'])
+        addr_elem, addr_junior = address_school_zone(r['addr'], r['sheet'], zone_cache)
+        school_elem, school_junior = addr_elem or kw_elem, addr_junior or kw_junior
         e = {'type': photo['type'] if photo else classify(r), 'title': r['title'],
              'region': region_of(r['sheet'], r['addr'], r['title']),
              'district': parse_district(r['addr']), 'price': price, 'area': area,
@@ -339,6 +381,7 @@ def build(master, cache):
             missing += 1
         final.append(e)
     final.sort(key=lambda e: (e['price'], e['title']))
+    save_school_zone_cache(zone_cache)
     return final, missing
 
 
