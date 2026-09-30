@@ -29,7 +29,7 @@ STATE = os.path.join(HERE, 'state.json')
 PHOTO_CACHE = os.path.join(HERE, 'photo_cache.json')
 LOG = os.path.join(HERE, 'sync.log')
 NETLIFY_SITE = '15b58d8f-8b0f-4d9b-8beb-b0c5c16bc591'
-DEPLOY_FILES = ['index.html', 'style.css', 'script.js', 'agent-photo.jpg',
+DEPLOY_FILES = ['index.html', 'style.css', 'script.js', 'agent-photo.jpg', 'logo-emblem.mp4',
                 'line-qr.png', 'og-image.jpg', 'robots.txt', 'sitemap.xml']
 # launchd 的 PATH 很精簡，補上 homebrew
 os.environ['PATH'] = '/opt/homebrew/bin:/usr/local/bin:' + os.environ.get('PATH', '')
