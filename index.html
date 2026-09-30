@@ -126,6 +126,35 @@
           <option value="3500-99999">3500萬以上</option>
         </select>
       </div>
+      <div class="search-field">
+        <label for="search-floor">樓層</label>
+        <select id="search-floor">
+          <option value="all">不限</option>
+          <option value="1">1 樓</option>
+          <option value="2-3">2–3 樓</option>
+          <option value="4-6">4–6 樓</option>
+          <option value="7-12">7–12 樓</option>
+          <option value="13-99">13 樓以上</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="search-rooms">格局</label>
+        <select id="search-rooms">
+          <option value="all">不限</option>
+          <option value="1">1 房</option>
+          <option value="2">2 房</option>
+          <option value="3">3 房</option>
+          <option value="4">4 房</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="search-parking">車位</label>
+        <select id="search-parking">
+          <option value="all">不限</option>
+          <option value="1">有車位</option>
+        </select>
+      </div>
       <button type="submit" class="btn btn-primary search-btn">搜尋物件</button>
     </form>
   </div>
@@ -156,32 +185,6 @@
       <button class="filter-tab" data-filter="house">公寓</button>
       <button class="filter-tab" data-filter="apartment">電梯大樓</button>
       <button class="filter-tab" data-filter="office">店面/辦公</button>
-    </div>
-
-    <div class="filter-tabs floor-tabs" id="floor-tabs" aria-label="樓層">
-      <span class="filter-label">樓層</span>
-      <button class="filter-tab active" data-floor="all">不限</button>
-      <button class="filter-tab" data-floor="1">1 樓</button>
-      <button class="filter-tab" data-floor="2-3">2–3 樓</button>
-      <button class="filter-tab" data-floor="4-6">4–6 樓</button>
-      <button class="filter-tab" data-floor="7-12">7–12 樓</button>
-      <button class="filter-tab" data-floor="13-99">13 樓以上</button>
-    </div>
-
-    <div class="filter-tabs" id="layout-tabs" aria-label="格局">
-      <span class="filter-label">格局</span>
-      <button class="filter-tab active" data-rooms="all">不限</button>
-      <button class="filter-tab" data-rooms="1">1 房</button>
-      <button class="filter-tab" data-rooms="2">2 房</button>
-      <button class="filter-tab" data-rooms="3">3 房</button>
-      <button class="filter-tab" data-rooms="4">4 房</button>
-      <button class="filter-tab" data-rooms="other">其他</button>
-    </div>
-
-    <div class="filter-tabs" id="parking-tabs" aria-label="車位">
-      <span class="filter-label">車位</span>
-      <button class="filter-tab active" data-parking="all">不限</button>
-      <button class="filter-tab" data-parking="1">有車位</button>
     </div>
 
     <div class="listing-grid" id="listing-grid">

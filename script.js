@@ -225,9 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const grid = document.getElementById('listing-grid');
   const emptyState = document.getElementById('listing-empty');
   const filterTabs = document.getElementById('filter-tabs');
-  const floorTabs = document.getElementById('floor-tabs');
-  const layoutTabs = document.getElementById('layout-tabs');
-  const parkingTabs = document.getElementById('parking-tabs');
   const countyTabs = document.getElementById('county-tabs');
   const districtTabs = document.getElementById('district-tabs');
   const pagination = document.getElementById('pagination');
@@ -235,12 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const favorites = new Set();
   const PAGE_SIZE = 6;
   let currentFilter = 'all';
-  let currentFloor = 'all';
-  let currentRooms = 'all';
-  let currentParking = 'all';
   let currentCounty = 'all';
   let currentDistrict = 'all';
-  let searchQuery = { type: 'all', region: 'all', price: 'all' };
+  let searchQuery = { type: 'all', region: 'all', price: 'all', floor: 'all', rooms: 'all', parking: 'all' };
   let currentPage = 1;
 
   const formatPrice = p => p >= 10000 ? `${(p / 10000).toFixed(1)}億` : `${p.toLocaleString()}萬`;
@@ -250,24 +244,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function getFiltered() {
     return listings.filter(item => {
       if (currentFilter !== 'all' && item.type !== currentFilter) return false;
-      if (currentRooms !== 'all') {
-        const isOther = ![1, 2, 3, 4].includes(item.rooms);
-        if (currentRooms === 'other' ? !isOther : item.rooms !== Number(currentRooms)) return false;
-      }
-      if (currentParking === '1' && !item.parking) return false;
       if (currentCounty !== 'all' && item.region !== currentCounty) return false;
       if (currentDistrict !== 'all' && item.district !== currentDistrict) return false;
-      if (currentFloor !== 'all') {
-        if (item.floor == null) return false;
-        const [lo, hi] = currentFloor.split('-').map(Number);
-        if (item.floor < lo || item.floor > (hi || lo)) return false;
-      }
       if (searchQuery.type !== 'all' && item.type !== searchQuery.type) return false;
       if (searchQuery.region !== 'all' && regionKey[item.region] !== searchQuery.region) return false;
       if (searchQuery.price !== 'all') {
         const [min, max] = searchQuery.price.split('-').map(Number);
         if (item.price < min || item.price > max) return false;
       }
+      if (searchQuery.floor !== 'all') {
+        if (item.floor == null) return false;
+        const [lo, hi] = searchQuery.floor.split('-').map(Number);
+        if (item.floor < lo || item.floor > (hi || lo)) return false;
+      }
+      if (searchQuery.rooms !== 'all') {
+        const isOther = ![1, 2, 3, 4].includes(item.rooms);
+        if (searchQuery.rooms === 'other' ? !isOther : item.rooms !== Number(searchQuery.rooms)) return false;
+      }
+      if (searchQuery.parking === '1' && !item.parking) return false;
       return true;
     });
   }
@@ -373,36 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderListings();
   });
 
-  floorTabs.addEventListener('click', e => {
-    const btn = e.target.closest('.filter-tab');
-    if (!btn) return;
-    floorTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    currentFloor = btn.dataset.floor;
-    currentPage = 1;
-    renderListings();
-  });
-
-  layoutTabs.addEventListener('click', e => {
-    const btn = e.target.closest('.filter-tab');
-    if (!btn) return;
-    layoutTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    currentRooms = btn.dataset.rooms;
-    currentPage = 1;
-    renderListings();
-  });
-
-  parkingTabs.addEventListener('click', e => {
-    const btn = e.target.closest('.filter-tab');
-    if (!btn) return;
-    parkingTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    currentParking = btn.dataset.parking;
-    currentPage = 1;
-    renderListings();
-  });
-
   pagination.addEventListener('click', e => {
     const btn = e.target.closest('[data-page]');
     if (!btn || btn.disabled) return;
@@ -431,19 +395,16 @@ document.addEventListener('DOMContentLoaded', () => {
       type: document.getElementById('search-type').value,
       region: document.getElementById('search-region').value,
       price: document.getElementById('search-price').value,
+      floor: document.getElementById('search-floor').value,
+      rooms: document.getElementById('search-rooms').value,
+      parking: document.getElementById('search-parking').value,
     };
     currentFilter = 'all';
-    currentFloor = 'all';
-    currentRooms = 'all';
-    currentParking = 'all';
-    layoutTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.rooms === 'all'));
-    parkingTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.parking === 'all'));
     currentCounty = 'all';
     currentDistrict = 'all';
     renderCountyTabs();
     renderDistrictTabs();
     filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
-    floorTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.floor === 'all'));
     currentPage = 1;
     renderListings();
     document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
