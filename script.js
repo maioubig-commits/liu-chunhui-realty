@@ -228,7 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const favorites = new Set();
   const PAGE_SIZE = 6;
-  let searchQuery = { type: 'all', region: 'all', district: 'all', price: 'all', floor: 'all', rooms: 'all', parking: 'all', schoolElem: 'all', schoolJunior: 'all' };
+  const DEFAULT_REGION = '台北市';
+  const DEFAULT_DISTRICT = '松山區';
+  let searchQuery = { type: 'all', region: DEFAULT_REGION, district: DEFAULT_DISTRICT, price: 'all', floor: 'all', rooms: 'all', parking: 'all', schoolElem: 'all', schoolJunior: 'all' };
   let currentPage = 1;
 
   const formatPrice = p => p >= 10000 ? `${(p / 10000).toFixed(1)}億` : `${p.toLocaleString()}萬`;
@@ -328,14 +330,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const regionSelect = document.getElementById('search-region');
   const districtSelect = document.getElementById('search-district');
 
-  function populateRegionOptions() {
+  function populateRegionOptions(preferred) {
     const present = [...new Set(listings.map(i => i.region))]
       .sort((a, b) => (COUNTY_ORDER.indexOf(a) + 1 || 99) - (COUNTY_ORDER.indexOf(b) + 1 || 99));
     regionSelect.innerHTML = '<option value="all">全部地區</option>' +
       present.map(r => `<option value="${r}">${r}</option>`).join('');
+    if (preferred && present.includes(preferred)) regionSelect.value = preferred;
   }
 
-  function populateDistrictOptions() {
+  function populateDistrictOptions(preferred) {
     const region = regionSelect.value;
     if (region === 'all') {
       districtSelect.innerHTML = '<option value="all">請先選擇地區</option>';
@@ -349,11 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
     districtSelect.innerHTML = '<option value="all">不限</option>' +
       districts.map(d => `<option value="${d}">${d}</option>`).join('');
     districtSelect.disabled = districts.length === 0;
+    if (preferred && districts.includes(preferred)) districtSelect.value = preferred;
   }
 
-  regionSelect.addEventListener('change', populateDistrictOptions);
-  populateRegionOptions();
-  populateDistrictOptions();
+  regionSelect.addEventListener('change', () => populateDistrictOptions());
+  populateRegionOptions(DEFAULT_REGION);
+  populateDistrictOptions(DEFAULT_DISTRICT);
 
   /* 國小／國中學區：案名裡有明確寫出校名的才抓得到，資料本來就少，選項有多少列多少 */
   const schoolElemSelect = document.getElementById('search-school-elem');
