@@ -224,16 +224,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Listings render & filter ---------- */
   const grid = document.getElementById('listing-grid');
   const emptyState = document.getElementById('listing-empty');
-  const filterTabs = document.getElementById('filter-tabs');
-  const countyTabs = document.getElementById('county-tabs');
-  const districtTabs = document.getElementById('district-tabs');
   const pagination = document.getElementById('pagination');
 
   const favorites = new Set();
   const PAGE_SIZE = 6;
-  let currentFilter = 'all';
-  let currentCounty = 'all';
-  let currentDistrict = 'all';
   let searchQuery = { type: 'all', region: 'all', price: 'all', floor: 'all', rooms: 'all', parking: 'all' };
   let currentPage = 1;
 
@@ -243,9 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getFiltered() {
     return listings.filter(item => {
-      if (currentFilter !== 'all' && item.type !== currentFilter) return false;
-      if (currentCounty !== 'all' && item.region !== currentCounty) return false;
-      if (currentDistrict !== 'all' && item.district !== currentDistrict) return false;
       if (searchQuery.type !== 'all' && item.type !== searchQuery.type) return false;
       if (searchQuery.region !== 'all' && regionKey[item.region] !== searchQuery.region) return false;
       if (searchQuery.price !== 'all') {
@@ -309,64 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPagination(filtered.length);
   }
 
-  filterTabs.addEventListener('click', e => {
-    const btn = e.target.closest('.filter-tab');
-    if (!btn) return;
-    filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    currentPage = 1;
-    renderListings();
-  });
-
-  /* 縣市 / 區域 篩選：選項由物件資料自動產生，之後新增縣市或區域不用改網頁 */
-  const COUNTY_ORDER = ['台北市', '新北市', '基隆市', '桃園市', '新竹市', '新竹縣', '宜蘭縣', '苗栗縣', '台中市',
-    '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '台南市', '高雄市', '屏東縣', '花蓮縣', '台東縣', '澎湖縣', '金門縣', '連江縣'];
-  const chip = (attr, value, label, active) =>
-    `<button class="filter-tab ${active ? 'active' : ''}" data-${attr}="${value}">${label}</button>`;
-
-  function renderCountyTabs() {
-    const present = [...new Set(listings.map(i => i.region))]
-      .sort((a, b) => (COUNTY_ORDER.indexOf(a) + 1 || 99) - (COUNTY_ORDER.indexOf(b) + 1 || 99));
-    countyTabs.querySelectorAll('.filter-tab').forEach(t => t.remove());
-    countyTabs.insertAdjacentHTML('beforeend',
-      chip('county', 'all', '不限', currentCounty === 'all') +
-      present.map(c => chip('county', c, c, currentCounty === c)).join(''));
-  }
-
-  function renderDistrictTabs() {
-    districtTabs.hidden = currentCounty === 'all';
-    districtTabs.querySelectorAll('.filter-tab').forEach(t => t.remove());
-    if (currentCounty === 'all') return;
-    const count = {};
-    listings.filter(i => i.region === currentCounty && i.district)
-      .forEach(i => { count[i.district] = (count[i.district] || 0) + 1; });
-    const districts = Object.keys(count).sort((a, b) => count[b] - count[a]);
-    districtTabs.insertAdjacentHTML('beforeend',
-      chip('district', 'all', '不限', currentDistrict === 'all') +
-      districts.map(d => chip('district', d, d, currentDistrict === d)).join(''));
-  }
-
-  countyTabs.addEventListener('click', e => {
-    const btn = e.target.closest('[data-county]');
-    if (!btn) return;
-    currentCounty = btn.dataset.county;
-    currentDistrict = 'all';
-    currentPage = 1;
-    renderCountyTabs();
-    renderDistrictTabs();
-    renderListings();
-  });
-
-  districtTabs.addEventListener('click', e => {
-    const btn = e.target.closest('[data-district]');
-    if (!btn) return;
-    currentDistrict = btn.dataset.district;
-    currentPage = 1;
-    renderDistrictTabs();
-    renderListings();
-  });
-
   pagination.addEventListener('click', e => {
     const btn = e.target.closest('[data-page]');
     if (!btn || btn.disabled) return;
@@ -399,18 +332,11 @@ document.addEventListener('DOMContentLoaded', () => {
       rooms: document.getElementById('search-rooms').value,
       parking: document.getElementById('search-parking').value,
     };
-    currentFilter = 'all';
-    currentCounty = 'all';
-    currentDistrict = 'all';
-    renderCountyTabs();
-    renderDistrictTabs();
-    filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
     currentPage = 1;
     renderListings();
     document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
   });
 
-  renderCountyTabs();
   renderListings();
 
   /* ---------- Testimonials ---------- */

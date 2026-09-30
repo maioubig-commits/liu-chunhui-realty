@@ -249,42 +249,6 @@ ul { list-style: none; }
 /* Listings */
 .listings { padding: 100px 0; background: var(--color-bg); }
 
-.filter-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 44px;
-}
-.filter-tabs[hidden] { display: none; }
-.filter-tabs + .filter-tabs { margin-top: -28px; }
-.filter-label {
-  align-self: center;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-light, #777);
-  padding-right: 4px;
-}
-#county-tabs .filter-tab, #district-tabs .filter-tab { padding: 8px 18px; font-size: 0.85rem; }
-.filter-tab {
-  padding: 10px 24px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: transparent;
-  font-family: inherit;
-  font-weight: 500;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: var(--transition);
-  color: var(--color-text);
-}
-.filter-tab:hover { border-color: var(--color-primary); }
-.filter-tab.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-}
-
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
